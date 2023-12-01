@@ -114,34 +114,17 @@ const runAction = () => {
 	} else {
 		log("Running the build script…");
 		if (useNpm) {
-			run(`npm run ${buildScriptName} --if-present`, pkgRoot);
+			run(`npm run ${buildScriptName} ${
+					release ? "--publish always" : ""
+				} ${args} --if-present`, pkgRoot);
 		} else {
 			// TODO: Use `yarn run ${buildScriptName} --if-present` once supported
 			// https://github.com/yarnpkg/yarn/issues/6894
 			const pkgJson = JSON.parse(readFileSync(pkgJsonPath, "utf8"));
 			if (pkgJson.scripts && pkgJson.scripts[buildScriptName]) {
-				run(`yarn run ${buildScriptName}`, pkgRoot);
-			}
-		}
-	}
-
-	log(`Building${release ? " and releasing" : ""} the Electron app…`);
-	const cmd = useVueCli ? "vue-cli-service electron:build" : "electron-builder";
-	for (let i = 0; i < maxAttempts; i += 1) {
-		try {
-			run(
-				`${useNpm ? "npx --no-install" : "yarn run"} ${cmd} --${platform} ${
+				run(`yarn run ${buildScriptName} ${
 					release ? "--publish always" : ""
-				} ${args}`,
-				appRoot,
-			);
-			break;
-		} catch (err) {
-			if (i < maxAttempts - 1) {
-				log(`Attempt ${i + 1} failed:`);
-				log(err);
-			} else {
-				throw err;
+				} ${args}`, pkgRoot);
 			}
 		}
 	}
